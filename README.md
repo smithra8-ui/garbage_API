@@ -1,4 +1,7 @@
 # garbage_API
 Garbage Card Game using the Deck of Cards API
 ##Issue
-Card's value and suit can be used, but complications when a new card is drawn from deck in a player turn
+ACE cards need to be read as a "1" card
+QUEEN cards need to be used as a wild card
+Need to add a "pile" of previously used cards so opponent has chance to steal
+
