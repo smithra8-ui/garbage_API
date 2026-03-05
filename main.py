@@ -42,6 +42,7 @@ def game_prep(player1_wins, player2_wins, turn):
                 "Spot" : "False"
                 } 
             player1_hand.append(next_card)
+
     elif player1_wins == 0:
         for i in range(10):
                 new_card = f"https://deckofcardsapi.com/api/deck/{deck_numbers.deck_id}/draw/?count=1"
@@ -56,6 +57,7 @@ def game_prep(player1_wins, player2_wins, turn):
                 }
                 
                 player1_hand.append(next_card)
+
     #----------------------
     # Next, player 2's cards are distributed
     if (player2_wins > 0):
@@ -72,6 +74,7 @@ def game_prep(player1_wins, player2_wins, turn):
                 "Spot" : "False"
                 } 
             player2_hand.append(next_card)
+
     elif player2_wins == 0:
         for i in range(10):
             new_card = f"https://deckofcardsapi.com/api/deck/{deck_numbers.deck_id}/draw/?count=1"
@@ -127,7 +130,7 @@ def check_win(player1_hand, player2_hand,  player1_wins, player2_wins):
         print("Player One has won the whole game!")
          
         print("Closing Game")
-        time.sleep(10)
+        time.sleep(5)
         exit()
         
     #if player one has won 10 rounds/ won the game, then tells so and closes the game
@@ -136,7 +139,7 @@ def check_win(player1_hand, player2_hand,  player1_wins, player2_wins):
          
         
         print("Closing Game")
-        time.sleep(10)
+        time.sleep(5)
         exit()
     
     # if neither has won the game
@@ -196,13 +199,11 @@ def draw_a_card(player1_hand, player2_hand, player1_wins, player2_wins, deck_id,
     print(" ")
 
     #tell user who turn it is
-    if turn%2 == 1:
-        print("Its Player One's turn")
-    else: 
-        print("It's Player Two's turn!")
     
-    #tell the user the drawn card
-    print(f"The card drawn was the {drawn_card["Value"]} of {drawn_card["Suit"]}")
+    if turn == 1:
+        print("It's Player One's Turn")
+    
+    
     #use the card in the turn
     player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
 #------------------
@@ -212,29 +213,43 @@ def draw_a_card(player1_hand, player2_hand, player1_wins, player2_wins, deck_id,
 # queen is never discarded, because it can be used in any spot
 def take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, take_card):
     
+    print(" ")
+    if turn%2 == 1:
+        print("It's Player One's Turn!")
+    else:
+        print("It's Player Two's Turn!")
+    
     # as long as the turn-ending card isn't a jack/king
     if take_card["Value"] != "KING" and take_card["Value"] != "JACK":
-        if take_card["Value"] == "ACE": # if the cards value is Ace, then the card number would be 1
+        if take_card["Value"] == "ACE":
             card_number = 1
-        else: # for anything else, use the card's value
+        else:
             card_number = int(take_card["Value"])
-        if turn%2 == 1: # for player one
-            for card in player1_hand: # for each card in player one's hand
-                # if the card can be used in the player hand, then use it in their turn
-                if card["Spot"] == "False" and take_card["Value"] == player1_hand[card_number-1]:
+        if turn%2 == 1:
+            try:
+                if player1_hand[card_number-1]["Spot"] == "False":
                     player_turn(player1_hand, player2_hand, player1_wins, player2_wins, take_card, deck_id, turn)
-                #if not, draw a card from the API deck
-                else: 
+                else:
+                    print(f"Player One does not need {take_card["Value"]} of {take_card["Suit"]}")
                     draw_a_card(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn)
-        if turn%2 == 0: # same as ^ but player 2
-            for card in player1_hand:
-                if card["Spot"] == "False" and take_card["Value"] == player2_hand[card_number-1]:
+            except IndexError:
+                print(f"Player One does not need {take_card["Value"]} of {take_card["Suit"]}")
+                draw_a_card(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn)
+        else:
+            try:
+                if player2_hand[card_number-1]["Spot"] == "False":
                     player_turn(player1_hand, player2_hand, player1_wins, player2_wins, take_card, deck_id, turn)
-                else: 
+                else:
+                    print(f"Player Two does not need {take_card["Value"]} of {take_card["Suit"]}")
                     draw_a_card(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn)
-    else: 
-        # if the turn-ending card WAS a jack/king, draw a card from the API deck
+            except IndexError:
+                print(f"Player Two does not need {take_card["Value"]} of {take_card["Suit"]}")
+                draw_a_card(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn)
+    else:
         draw_a_card(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn)
+
+
+
 
 #-------------------------------------
 # This function is where the turn of the player happens,
@@ -247,149 +262,133 @@ def take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_
 # so if the other player needs that card, they can use it
 
 def player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn):
-
+    time.sleep(5)
     check_win(player1_hand, player2_hand, player1_wins, player2_wins) # check if a player has won 10 times
-    #if the card is jack/king, then the player loses their turn
+
+    
+
     if drawn_card["Value"] == "JACK" or drawn_card["Value"] == "KING":
-        print(f"Player has drawn a {drawn_card["Value"]}, next player's turn.")
+        print(f"Player has drawn the {drawn_card["Value"]} of {drawn_card["Suit"]}, next player's turn.")
         
-         
         turn += 1
         take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
-
-    # if the card has a value of Ace, it represents the first/1 card of the hand
+    
     elif drawn_card["Value"] == "ACE":
         print(f"Player has drawn the {drawn_card["Value"]} of {drawn_card["Suit"]}.")
-        
-        if turn%2 == 1: #if it is player 1's turn
-            
-            if player1_hand[0]["Spot"] == "False": #if there isnt a card in the 1 spot
-
-                next_card = { #the card currently in that spot will be saved
+        if turn%2 == 1:
+            if player1_hand[0]["Spot"] == "False":
+                next_card = { #save the card that was previously in the spot
                     "Suit" : player1_hand[0]["Suit"],
                     "Value" : player1_hand[0]["Value"],
                     "Spot" : "False",
                 }
 
-                player1_hand[0] = { # the spot will be taken by the ace, and have shown it is in the right spot with "Spot"
-                    "Suit" : drawn_card["Suit"],
-                    "Value" : "ACE",
-                    "Spot" : "True",
+                player1_hand[0] = { # replace the card in the spot with the queen card
+                    "Suit" : "ACE",
+                    "Value" : drawn_card["Value"],
+                    "Spot" : "True"
                 }
+                print("Player One uses this card")
+                print("Using new card...")
+                print(" ")
 
-                # then continue with their turn with the card that was saved
                 player_turn(player1_hand, player2_hand, player1_wins, player2_wins, next_card, deck_id, turn)
-                
+            
             else:
-                print("You already have the correct card") # if that spot is fulfilled
-                if player1_hand[0]["Spot"] == False: # if the spot was fulfilled but not correct spot value
-                    player1_hand[0]["Spot"] == True # change to right value
-                turn += 1 # next turn
+                print("You already have this card")
+                turn += 1
                 take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
-        else: # same as ^ but if the turn was player two's
+        else:
             if player2_hand[0]["Spot"] == "False":
-                print(player2_hand[0])
-                next_card = {
+                next_card = { #save the card that was previously in the spot
                     "Suit" : player2_hand[0]["Suit"],
                     "Value" : player2_hand[0]["Value"],
                     "Spot" : "False",
                 }
-
-                player2_hand[0] = {
+                player2_hand[0] = { # replace the card in the spot with the queen card
                     "Suit" : drawn_card["Suit"],
-                    "Value" : "ACE",
-                    "Spot" : "True",
+                    "Value" : drawn_card["Value"],
+                    "Spot" : "True"
                 }
 
+                print("Player Two uses this card")
+                print("Using new card...")
+                print(" ")
                 player_turn(player1_hand, player2_hand, player1_wins, player2_wins, next_card, deck_id, turn)
             else:
-                print("You already have the correct card")
-                if player2_hand[0]["Spot"] == False:
-                    player2_hand[0]["Spot"] == True
+                print("You already have this card")
                 turn += 1
                 take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
-    #if the card drawn was a card with a queen value
     elif drawn_card["Value"] == "QUEEN":
-        # asking which card spot you would like to put the wild card in
         print(f"You have drawn the QUEEN of {drawn_card["Suit"]}, which place do u want this card to take?(In number format)")
-
-        if turn%2 == 1: # if player one's turn
-            
-            # get the updated player 1 hand, and the card that was previously in that chosen spot from queen_card
+        if turn%2 == 1:
             player1_hand, next_card = queen_card(player1_hand, player2_hand, player1_hand, player1_wins, player2_wins, drawn_card, deck_id)
-
-            # continue the turn
             player_turn(player1_hand, player2_hand, player1_wins, player2_wins, next_card, deck_id, turn)
         else:
-            # same as ^ but if the turn was player two's
             player2_hand, next_card = queen_card(player1_hand, player2_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id)
-
             player_turn(player1_hand, player2_hand, player1_wins, player2_wins, next_card, deck_id, turn)
-    
-    # if the card was a number card
     else:
-        card_number = int(drawn_card["Value"]) # the card number would be recorded as an integer
-
-        if turn%2 == 1: # if it's player one's turn
+        print(f"Player has drawn the {drawn_card["Value"]} of {drawn_card["Suit"]}.")
+        card_number = int(drawn_card["Value"])
+        if turn%2 == 1:
             try:
-                if player1_hand[card_number-1]["Spot"] == "False": # if the card's spot isnt called for
-                    
-                
-                    player1_hand[card_number-1] = { # change the spot to hold the card
+                if player1_hand[card_number-1]["Spot"] == "False":
+
+                    print("Player One uses this card")
+                    next_card = { #save the card that was previously in the spot
+                    "Suit" : player1_hand[card_number-1]["Suit"],
+                    "Value" : player1_hand[card_number-1]["Value"],
+                    "Spot" : "False",
+                    }
+                    player1_hand[card_number-1] = { # replace the card in the spot with the queen card
                         "Suit" : drawn_card["Suit"],
                         "Value" : drawn_card["Value"],
-                        "Spot" : "True",
+                        "Spot" : "True"
                     }
-                    next_card = { # save the old card
-                        "Suit" : drawn_card["Suit"],
-                        "Value" : drawn_card["Value"], 
-                        "Spot" : "False"
-                    } 
-                    # use old card to continue player turn
-                    player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
-                    
+                    print("Using new card...")
+                    print(" ")
+                    player_turn(player1_hand, player2_hand, player1_wins, player2_wins, next_card, deck_id, turn)
                 else:
-                    print("You already have the correct card") # if the spot is called for
+                    print("You already have this card")
                     turn += 1
-                    if player1_hand[card_number-1]["Spot"] == False: # if the spot had the right card, but didn't know
-                        player1_hand[card_number-1]["Spot"] == True # change value to True
-
-                    #continue turn
-                    take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
-
-            # if the card was never a card, you needed at all(after won a round/some rounds)
-            except IndexError:
-                    print("You don't need this card")
-                    turn += 1
-                    take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
-
-        else: # same as ^ but player two's turn
-            
-            try:
-                if player2_hand[card_number-1]["Spot"] == "False":
-                    player2_hand[card_number-1] = {
-                        "Suit" : drawn_card["Suit"],
-                        "Value" : drawn_card["Value"],
-                        
-                        "Spot" : "True",
-                    }
-                    next_card = {
-                        "Suit" : drawn_card["Suit"],
-                        "Value" : drawn_card["Value"], 
-                        "Spot" : "False"
-                    } 
-                    player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
-                    
-                else:
-                    print("You already have the correct card")
-                    turn += 1
-                    if player1_hand[card_number-1]["Spot"] == False:
-                        player1_hand[card_number-1]["Spot"] == True
                     take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
             except IndexError:
                 print("You don't need this card")
                 turn += 1
                 take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
+            
+
+
+        else:
+            try:
+                if player2_hand[card_number-1]["Spot"] == "False":
+
+                    print("Player Two uses this card")
+                    next_card = { #save the card that was previously in the spot
+                    "Suit" : player2_hand[card_number-1]["Suit"],
+                    "Value" : player2_hand[card_number-1]["Value"],
+                    "Spot" : "False",
+                    }
+                    player2_hand[card_number-1] = { # replace the card in the spot with the queen card
+                        "Suit" : drawn_card["Suit"],
+                        "Value" : drawn_card["Value"],
+                        "Spot" : "True"
+                    }
+                    print("Using new card...")
+                    print(" ")
+                    player_turn(player1_hand, player2_hand, player1_wins, player2_wins, next_card, deck_id, turn)
+                else:
+                    print("You already have this card")
+                    turn += 1
+                    take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
+            except IndexError:
+                print("You don't need this card")
+                turn += 1
+                take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
+            
+
+
+            
 #-------------------------------------------------
 # this function is to see if a card in the player's hand is not already in the right spot, 
 # if not, then the Queen(Wild Card) can be used to replace it
@@ -399,11 +398,7 @@ def queen_card(player1_hand, player2_hand, player_hand, player1_wins, player2_wi
     try:
         choice = int(input())
         # if the spot is already called for
-        if player_hand[choice-1]["Spot"] == "True":
-            print("card already in right spot")
-            # direct to player_turn with same queen_card, coming back to this function
-            player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
-        else:
+        if player_hand[choice-1]["Spot"] == "False":
             # spot not called for, therefore can place the queen card here
             next_card = { #save the card that was previously in the spot
                 "Suit" : player_hand[choice-1]["Suit"],
@@ -415,10 +410,16 @@ def queen_card(player1_hand, player2_hand, player_hand, player1_wins, player2_wi
                 "Value" : "QUEEN",
                 "Spot" : "True",
             }
+            print("Card Replaced!")
             return player_hand, next_card #return these two values to player_turn so that the turn continues
+
+        else:
+            print("card already in right spot")
+            # direct to player_turn with same queen_card, coming back to this function
+            player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
         
     # if the user inputs anything but a number in the player_hand index
-    except ValueError:
+    except IndexError:
         print("Please input a NUMBER")
         player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
 
