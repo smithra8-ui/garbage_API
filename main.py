@@ -3,7 +3,7 @@ import time
 from card_deck import Deck, Given_Card
 
 
-player1_wins = 0
+player1_wins = 9
 player2_wins = 0
 turn = 1
 
@@ -15,7 +15,7 @@ turn = 1
 # Once it is done, it moves on to start the game with play_game
 def game_prep(player1_wins, player2_wins, turn):
     player1_hand = []
-    player2_hand =[]
+    player2_hand = []
     new_deck = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1"
 
     deck_info = requests.get(new_deck).json()
@@ -264,17 +264,17 @@ def take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_
 def player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn):
     time.sleep(5)
     check_win(player1_hand, player2_hand, player1_wins, player2_wins) # check if a player has won 10 times
-
+    
     
 
     if drawn_card["Value"] == "JACK" or drawn_card["Value"] == "KING":
-        print(f"Player has drawn the {drawn_card["Value"]} of {drawn_card["Suit"]}, next player's turn.")
+        print(f"Player has the {drawn_card["Value"]} of {drawn_card["Suit"]}, next player's turn.")
         
         turn += 1
         take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
     
     elif drawn_card["Value"] == "ACE":
-        print(f"Player has drawn the {drawn_card["Value"]} of {drawn_card["Suit"]}.")
+        print(f"Player has the {drawn_card["Value"]} of {drawn_card["Suit"]}.")
         if turn%2 == 1:
             if player1_hand[0]["Spot"] == "False":
                 next_card = { #save the card that was previously in the spot
@@ -320,15 +320,16 @@ def player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_ca
                 turn += 1
                 take_opponents(player1_hand, player2_hand, player1_wins, player2_wins, deck_id, turn, drawn_card)
     elif drawn_card["Value"] == "QUEEN":
-        print(f"You have drawn the QUEEN of {drawn_card["Suit"]}, which place do u want this card to take?(In number format)")
+        print(f"Player has the QUEEN of {drawn_card["Suit"]}, which place do u want this card to take?(In number format)")
+
         if turn%2 == 1:
-            player1_hand, next_card = queen_card(player1_hand, player2_hand, player1_hand, player1_wins, player2_wins, drawn_card, deck_id)
+            player1_hand, next_card = queen_card(player1_hand, player2_hand, player1_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
             player_turn(player1_hand, player2_hand, player1_wins, player2_wins, next_card, deck_id, turn)
         else:
-            player2_hand, next_card = queen_card(player1_hand, player2_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id)
+            player2_hand, next_card = queen_card(player1_hand, player2_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
             player_turn(player1_hand, player2_hand, player1_wins, player2_wins, next_card, deck_id, turn)
     else:
-        print(f"Player has drawn the {drawn_card["Value"]} of {drawn_card["Suit"]}.")
+        print(f"Player has the {drawn_card["Value"]} of {drawn_card["Suit"]}.")
         card_number = int(drawn_card["Value"])
         if turn%2 == 1:
             try:
@@ -392,7 +393,7 @@ def player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_ca
 #-------------------------------------------------
 # this function is to see if a card in the player's hand is not already in the right spot, 
 # if not, then the Queen(Wild Card) can be used to replace it
-def queen_card(player1_hand, player2_hand, player_hand, player1_wins, player2_wins, drawn_card, deck_id):
+def queen_card(player1_hand, player2_hand, player_hand, player1_wins, player2_wins, drawn_card, deck_id, turn):
     print("Please choose a spot!")
     
     try:
@@ -417,11 +418,14 @@ def queen_card(player1_hand, player2_hand, player_hand, player1_wins, player2_wi
             print("card already in right spot")
             # direct to player_turn with same queen_card, coming back to this function
             player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
-        
     # if the user inputs anything but a number in the player_hand index
-    except IndexError:
+    except ValueError:
         print("Please input a NUMBER")
         player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
+    else:
+        print("You don't need that spot")
+        player_turn(player1_hand, player2_hand, player1_wins, player2_wins, drawn_card, deck_id, turn)
+        
 
 #----------------------------------------------------
 #start the code off by starting the first round of the game
